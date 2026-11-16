@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Você é de Esquerda ou de Direita?</title>
+  <style>
+    :root {
+      --accent: #2c3e50;
+      --selected: #dfe6e9;
+      --selected-border: #636e72;
+      --bg: #f8f9fa;
+      --card: #ffffff;
+      --text: #2c3e50;
+      --border: #dee2e6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 16px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+      padding: 20px 12px;
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 6px; }
+    .subtitle { color: #666; font-size: 0.95rem; }
+    .progress-bar {
+      height: 8px; background: #e9ecef; border-radius: 4px;
+      margin: 16px 0 8px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--accent); width: 0%;
+      transition: width 0.3s ease; border-radius: 4px;
+    }
+    .progress-text {
+      text-align: center; font-size: 0.85rem; color: #666; margin-bottom: 20px;
+    }
+    .question {
+      background: var(--card); border-radius: 10px; padding: 16px 18px;
+      margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      border-left: 4px solid #adb5bd; transition: border-color 0.2s;
+    }
+    .question.answered { border-left-color: #27ae60; }
+    .question h3 { font-size: 0.95rem; margin-bottom: 12px; font-weight: 600; }
+    .options { display: flex; flex-direction: column; gap: 8px; }
+    label.option {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 12px; border: 1.5px solid var(--border);
+      border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 0.88rem;
+    }
+    label.option:hover { background: #f1f3f5; border-color: #adb5bd; }
+    label.option.selected { background: var(--selected); border-color: var(--selected-border); }
+    input[type="radio"] { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+    .badge {
+      display: inline-block; font-size: 0.7rem; font-weight: 700;
+      padding: 2px 7px; border-radius: 4px; margin-right: 4px;
+      color: white; background: #636e72;
+    }
+    #submit-area { text-align: center; margin: 28px 0 16px; }
+    button#calcular {
+      background: var(--accent); color: white; border: none;
+      padding: 14px 36px; font-size: 1.05rem; font-weight: 600;
+      border-radius: 8px; cursor: pointer; transition: background 0.2s;
+    }
+    button#calcular:hover { background: #1a252f; }
+    button#calcular:disabled { background: #adb5bd; cursor: not-allowed; }
+    #resultado {
+      display: none; background: var(--card); border-radius: 12px;
+      padding: 28px 20px; margin: 24px 0; text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    #resultado.visible { display: block; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .resultado-titulo { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
+    .resultado-desc { color: #555; margin-bottom: 20px; font-size: 0.95rem; }
+    .barra-container { max-width: 400px; margin: 0 auto 16px; }
+    .barra-labels {
+      display: flex; justify-content: space-between;
+      font-size: 0.8rem; font-weight: 600; margin-bottom: 4px;
+    }
+    .barra-labels .esq { color: #c0392b; }
+    .barra-labels .dir { color: #2980b9; }
+    .barra {
+      height: 18px;
+      background: linear-gradient(90deg, #c0392b 0%, #e67e22 35%, #f1c40f 50%, #27ae60 65%, #2980b9 100%);
+      border-radius: 9px; position: relative; overflow: visible;
+    }
+    .marcador {
+      position: absolute; top: -6px; width: 4px; height: 30px;
+      background: #2c3e50; border-radius: 2px;
+      transform: translateX(-50%); transition: left 0.6s ease;
+    }
+    .marcador::after {
+      content: ""; position: absolute; bottom: -8px; left: 50%;
+      transform: translateX(-50%); border: 6px solid transparent;
+      border-top-color: #2c3e50;
+    }
+    .contagem {
+      display: flex; justify-content: center; gap: 32px;
+      margin: 18px 0 8px; font-size: 0.95rem;
+    }
+    .contagem span { font-weight: 700; }
+    .nota { font-size: 0.8rem; color: #777; margin-top: 16px; line-height: 1.4; }
+    footer {
+      text-align: center; font-size: 0.75rem; color: #999;
+      margin-top: 32px; padding-bottom: 20px;
+    }
+    .reiniciar {
+      margin-top: 16px; background: transparent; border: 1.5px solid #adb5bd;
+      color: #555; padding: 8px 20px; border-radius: 6px;
+      cursor: pointer; font-size: 0.9rem;
+    }
+    .reiniciar:hover { background: #f1f3f5; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Você é de Esquerda ou de Direita?</h1>
+  <p class="subtitle">30 perguntas simples — descubra agora</p>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <p class="progress-text" id="progressText">0 de 30 respondidas</p>
+</header>
+
+<form id="quizForm"></form>
+
+<div id="submit-area">
+  <button type="button" id="calcular" disabled>Ver meu resultado</button>
+</div>
+
+<div id="resultado">
+  <div class="resultado-titulo" id="resTitulo"></div>
+  <p class="resultado-desc" id="resDesc"></p>
+  <div class="barra-container">
+    <div class="barra-labels">
+      <span class="esq">Esquerda</span>
+      <span class="dir">Direita</span>
+    </div>
+    <div class="barra"><div class="marcador" id="marcador"></div></div>
+  </div>
+  <div class="contagem">
+    <div>Esquerda: <span id="countEsq">0</span></div>
+    <div>Direita: <span id="countDir">0</span></div>
+  </div>
+  <p class="nota">
+    Esse teste é só uma brincadeira pra refletir. Ninguém é 100% de um lado só. 
+    Use o resultado só pra se conhecer um pouco melhor.
+  </p>
+  <button class="reiniciar" onclick="location.reload()">Fazer de novo</button>
+</div>
+
+<footer>Teste rápido de orientação política • Resultado na hora</footer>
+
+<script>
+// Cada questão tem a opção de ESQUERDA e de DIREITA.
+// Na hora de mostrar, a gente embaralha qual vai ser A e qual vai ser B.
+const questoes = [
+  { titulo: "Sobre o governo meter o bedelho na economia:", esquerda: "O governo tem que intervir bastante pra diminuir a diferença entre ricos e pobres.", direita: "Quanto menos o governo atrapalhar, melhor. O mercado se resolve sozinho." },
+  { titulo: "Sobre impostos:", esquerda: "Quem ganha mais tem que pagar bem mais imposto pra bancar saúde, escola e ajuda pros mais pobres.", direita: "Imposto alto só atrapalha. Tem que ser mais baixo e simples pra todo mundo trabalhar e investir." },
+  { titulo: "Sobre Bolsa Família e programas de ajuda:", esquerda: "Tem que ter ajuda do governo de forma ampla e permanente pra quem precisa.", direita: "A ajuda tem que ser temporária. O ideal é a pessoa conseguir andar com as próprias pernas." },
+  { titulo: "Sobre vender empresas do governo (privatizar):", esquerda: "Não gosto. Setor importante tem que ficar na mão do governo.", direita: "Acho bom. Empresa particular costuma funcionar melhor e mais barato." },
+  { titulo: "Sobre regras pra empresas:", esquerda: "Tem que ter muita regra pra proteger o trabalhador e o consumidor.", direita: "Quanto menos regra, melhor. Empresa livre gera mais emprego e progresso." },
+  { titulo: "Sobre a diferença entre ricos e pobres:", esquerda: "É um problema grande e o governo tem que agir pra diminuir isso.", direita: "Faz parte da vida. Quem se esforça e tem talento acaba ganhando mais." },
+  { titulo: "Sobre saúde:", esquerda: "Todo mundo tem que ter acesso de graça e prioritariamente pelo SUS.", direita: "Melhor ter plano particular e concorrência. Cada um escolhe o que quer." },
+  { titulo: "Sobre educação:", esquerda: "Prioridade é escola pública boa e cotas pra quem vem de trás.", direita: "Prioridade é a família poder escolher a escola (particular, voucher etc.)." },
+  { titulo: "Sobre cotas em universidade e concurso:", esquerda: "São necessárias pra corrigir a desigualdade que existe há muito tempo.", direita: "Atrapalham. O certo é valer o mérito de cada um, sem preferência." },
+  { titulo: "Sobre aborto:", esquerda: "A mulher tem que ter o direito de decidir. Tem que ser liberado.", direita: "Tem que ser restrito. A vida do bebê também conta." },
+  { titulo: "Sobre família:", esquerda: "Qualquer tipo de família baseada no amor tem que ter o mesmo direito.", direita: "A família tradicional (pai, mãe e filhos) tem um valor especial e deve ser priorizada." },
+  { titulo: "Sobre gênero e sexo:", esquerda: "Gênero é construção social. A pessoa pode se identificar como quiser.", direita: "Sexo é biológico (homem ou mulher). As leis têm que respeitar isso." },
+  { titulo: "Sobre imigração:", esquerda: "Fronteira mais aberta. Imigrante enriquece o país.", direita: "Fronteira tem que ser controlada com rigor. Prioridade pro brasileiro." },
+  { titulo: "Sobre orgulho de ser brasileiro:", esquerda: "Orgulho demais de país é problemático. O importante é a solidariedade com todo mundo.", direita: "Ter orgulho e defender o Brasil, a cultura e a soberania é legítimo e importante." },
+  { titulo: "Sobre crime:", esquerda: "O certo é prevenir com política social e recuperar o bandido.", direita: "O certo é punir de verdade, colocar na cadeia e proteger a vítima." },
+  { titulo: "Sobre arma:", esquerda: "Tem que ser bem difícil de ter. Só o Estado deve ter o monopólio da força.", direita: "Cidadão de bem tem que poder se defender. Direito de ter arma." },
+  { titulo: "Sobre meio ambiente:", esquerda: "Proteger a natureza e o clima tem que vir antes, mesmo se custar emprego.", direita: "Emprego e crescimento econômico vêm primeiro. Não pode travar a produção." },
+  { titulo: "Sobre religião na política:", esquerda: "Estado tem que ser laico de verdade. Religião fica na vida particular.", direita: "Valores religiosos tradicionais têm espaço legítimo no debate público." },
+  { titulo: "Sobre liberdade de expressão:", esquerda: "Discurso de ódio e ofensa a minorias tem que ser limitado.", direita: "Liberdade de falar tem que ser a mais ampla possível, mesmo se ofender." },
+  { titulo: "Sobre cotas e “justiça social”:", esquerda: "Precisa dar vantagem pra grupos que historicamente ficaram pra trás.", direita: "Todo mundo tem que ser tratado igual na frente da lei, sem preferência de grupo." },
+  { titulo: "Sobre empresa e lucro:", esquerda: "Lucro excessivo tem que ser limitado. Empresa tem que ter responsabilidade social.", direita: "Lucro é legítimo e é o que move o progresso. Governo atrapalhando só piora." },
+  { titulo: "Sobre política internacional:", esquerda: "Cooperar com outros países e organismos internacionais é importante.", direita: "O interesse do Brasil tem que vir primeiro, acima de acordos internacionais." },
+  { titulo: "Sobre tradição e cultura:", esquerda: "Tradição tem que ser questionada e atualizada em nome do progresso.", direita: "Tradição e valores antigos merecem ser preservados e respeitados." },
+  { titulo: "Sobre menor de idade que comete crime:", esquerda: "Prioridade é medida socioeducativa. Não reduzir a maioridade penal.", direita: "Em caso grave, tem que reduzir a maioridade ou punir com mais rigor." },
+  { titulo: "Sobre salário e emprego:", esquerda: "Salário mínimo alto e muita proteção pro trabalhador.", direita: "Mais flexibilidade e menos regra. Assim gera mais emprego." },
+  { titulo: "Sobre propriedade privada:", esquerda: "Pode e deve ser limitada quando for interesse da sociedade (reforma agrária etc.).", direita: "É um direito fundamental e tem que ser bem protegido." },
+  { titulo: "Sobre mudança na sociedade:", esquerda: "Mudança rápida e profunda é necessária pra chegar na justiça.", direita: "Mudança tem que ser devagar. Quebrar tudo de uma vez costuma piorar." },
+  { titulo: "Sobre os ricos:", esquerda: "Concentração de dinheiro é um problema. O governo tem que corrigir.", direita: "Quem ficou rico de forma legal, problema é dele. O foco é criar oportunidade, não igualar resultado." },
+  { titulo: "Sobre segurança:", esquerda: "Investir em política social reduz a violência no longo prazo.", direita: "Polícia na rua, cadeia e punição efetiva são o que resolve no curto e médio prazo." },
+  { titulo: "Sobre a sociedade em geral:", esquerda: "A sociedade é marcada por opressão (classe, raça, gênero) e o Estado tem que desmontar isso.", direita: "A sociedade funciona melhor com responsabilidade individual, mérito e instituições estáveis." }
+];
+
+// Mapeamento: para cada questão, qual letra (A ou B) corresponde à esquerda
+const mapaEsquerda = [];
+
+const form = document.getElementById('quizForm');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const btn = document.getElementById('calcular');
+
+// Embaralha de forma determinística mas misturada (baseado no índice)
+// Assim A não é sempre esquerda
+questoes.forEach((q, i) => {
+  // Alterna de forma irregular para não ficar padrão óbvio
+  const esquerdaEmA = (i * 7 + 3) % 2 === 0; // pseudo-aleatório fixo
+  mapaEsquerda[i] = esquerdaEmA ? 'A' : 'B';
+
+  const opcaoA = esquerdaEmA ? q.esquerda : q.direita;
+  const opcaoB = esquerdaEmA ? q.direita : q.esquerda;
+
+  const div = document.createElement('div');
+  div.className = 'question';
+  div.id = `q${i}`;
+  div.innerHTML = `
+    <h3>${i + 1}. ${q.titulo}</h3>
+    <div class="options">
+      <label class="option" data-q="${i}" data-val="A">
+        <input type="radio" name="q${i}" value="A">
+        <span><span class="badge">A</span> ${opcaoA}</span>
+      </label>
+      <label class="option" data-q="${i}" data-val="B">
+        <input type="radio" name="q${i}" value="B">
+        <span><span class="badge">B</span> ${opcaoB}</span>
+      </label>
+    </div>
+  `;
+  form.appendChild(div);
+});
+
+function updateProgress() {
+  const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+  progressFill.style.width = (answered / 30 * 100) + '%';
+  progressText.textContent = `${answered} de 30 respondidas`;
+  btn.disabled = answered < 30;
+  document.querySelectorAll('.question').forEach((qEl) => {
+    qEl.classList.toggle('answered', !!qEl.querySelector('input:checked'));
+  });
+}
+
+document.addEventListener('change', (e) => {
+  if (e.target.type === 'radio') {
+    const label = e.target.closest('label');
+    const qId = label.dataset.q;
+    document.querySelectorAll(`label[data-q="${qId}"]`).forEach(l => l.classList.remove('selected'));
+    label.classList.add('selected');
+    updateProgress();
+  }
+});
+
+document.addEventListener('click', (e) => {
+  const label = e.target.closest('label.option');
+  if (label) {
+    const radio = label.querySelector('input');
+    radio.checked = true;
+    radio.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+});
+
+btn.addEventListener('click', () => {
+  let countEsq = 0, countDir = 0;
+
+  for (let i = 0; i < 30; i++) {
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    if (selected) {
+      if (selected.value === mapaEsquerda[i]) {
+        countEsq++;
+      } else {
+        countDir++;
+      }
+    }
+  }
+
+  let titulo, desc;
+  if (countEsq >= 20) {
+    titulo = "Bem de Esquerda";
+    desc = "Suas respostas mostram que você puxa bastante pro lado da esquerda.";
+  } else if (countEsq >= 15) {
+    titulo = "Centro-Esquerda";
+    desc = "Você fica mais pro lado da esquerda, mas sem extremismo.";
+  } else if (countDir >= 20) {
+    titulo = "Bem de Direita";
+    desc = "Suas respostas mostram que você puxa bastante pro lado da direita.";
+  } else if (countDir >= 15) {
+    titulo = "Centro-Direita";
+    desc = "Você fica mais pro lado da direita, mas sem extremismo.";
+  } else {
+    titulo = "Centro / Misturado";
+    desc = "Você fica no meio ou mistura ideias dos dois lados. Bem comum.";
+  }
+
+  document.getElementById('resTitulo').textContent = titulo;
+  document.getElementById('resDesc').textContent = desc;
+  document.getElementById('countEsq').textContent = countEsq;
+  document.getElementById('countDir').textContent = countDir;
+  document.getElementById('marcador').style.left = (countDir / 30 * 100) + '%';
+
+  const titEl = document.getElementById('resTitulo');
+  if (countEsq >= 15) titEl.style.color = '#c0392b';
+  else if (countDir >= 15) titEl.style.color = '#2980b9';
+  else titEl.style.color = '#7f8c8d';
+
+  document.getElementById('resultado').classList.add('visible');
+  document.getElementById('resultado').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+</script>
+</body>
+</html>
